@@ -256,386 +256,645 @@ class DbHandler {
             return NULL;
         }
     }
-    
-    public function   getQuotes($category_id,$author_id,$quote_id) {
-        
-    	
-    	$authorList_array =array();
-    	$author_array = array();
-    	$author_quotes_array = array();
-    	
-        if($category_id == 'all' && $author_id == 'all' && $quote_id == 'null')
-            {
 
-            	// All authors All Categories
-            	
+    public function getQuotes($tag_id, $author_id, $quote_id, $QOF, $MFQ, $RQ) {
+        
+          $authorList_array = array();
+        $author_array = array();
+        
+        if($QOF){
+            
+            $QODID = self::getQODID($this);
+            
+    
+            $stmtauthor = $this->conn->prepare("SELECT a.* 
+													FROM authors a, quotes q
+													WHERE a.author_id = q.author_id
+													AND quote_id = " . self::getQODID($this). "");
+            $stmtauthor->execute();
+
+            $resultauthor = $stmtauthor->get_result();
+            $stmtauthor->close();
+
+
+            while ($row_authors = $resultauthor->fetch_assoc()) {
+                foreach ($row_authors as $key => $value) {
+                    $author_array[$key] = $value;
+                }
+
+                $author_array['quotes'] = array();
+                $author_id = $row_authors['author_id'];
+
+
+                $authorQuotes = self::getQuoteByID($this, $QODID);
+
+
+
+                while ($row_quotes = $authorQuotes->fetch_assoc()) {
+                    foreach ($row_quotes as $key => $value) {
+                        $quotes_array[$key] = $value;
+                    }
+
+                    $tags = self::getTagsByQuoteID($this, $row_quotes['quote_id']);
+
+                    $quotes_array['tags'] = $tags;
+                    array_push($author_array['quotes'], $quotes_array);
+                }
+
+
+
+                array_push($authorList_array, $author_array);
+
+            }
+
+
+            return $authorList_array;
+        
+
+            
+        }
+        
+        
+        if($MFQ){
+            
+            $QODID = self::getMFQID($this);
+            
+    
+            $stmtauthor = $this->conn->prepare("SELECT a.* 
+													FROM authors a, quotes q
+													WHERE a.author_id = q.author_id
+													AND quote_id = " . self::getQODID($this). "");
+            $stmtauthor->execute();
+
+            $resultauthor = $stmtauthor->get_result();
+            $stmtauthor->close();
+
+
+            while ($row_authors = $resultauthor->fetch_assoc()) {
+                foreach ($row_authors as $key => $value) {
+                    $author_array[$key] = $value;
+                }
+
+                $author_array['quotes'] = array();
+                $author_id = $row_authors['author_id'];
+
+
+                $authorQuotes = self::getQuoteByID($this, $QODID);
+
+
+
+                while ($row_quotes = $authorQuotes->fetch_assoc()) {
+                    foreach ($row_quotes as $key => $value) {
+                        $quotes_array[$key] = $value;
+                    }
+
+                    $tags = self::getTagsByQuoteID($this, $row_quotes['quote_id']);
+
+                    $quotes_array['tags'] = $tags;
+                    array_push($author_array['quotes'], $quotes_array);
+                }
+
+
+
+                array_push($authorList_array, $author_array);
+
+            }
+
+
+            return $authorList_array;
+        
+
+            
+        }
+
+        if($RQ){
+            
+            $QODID = self::getRQID($this);
+            
+    
+            $stmtauthor = $this->conn->prepare("SELECT a.* 
+													FROM authors a, quotes q
+													WHERE a.author_id = q.author_id
+													AND quote_id = " . self::getQODID($this). "");
+            $stmtauthor->execute();
+
+            $resultauthor = $stmtauthor->get_result();
+            $stmtauthor->close();
+
+
+            while ($row_authors = $resultauthor->fetch_assoc()) {
+                foreach ($row_authors as $key => $value) {
+                    $author_array[$key] = $value;
+                }
+
+                $author_array['quotes'] = array();
+                $author_id = $row_authors['author_id'];
+
+
+                $authorQuotes = self::getQuoteByID($this, $QODID);
+
+
+
+                while ($row_quotes = $authorQuotes->fetch_assoc()) {
+                    foreach ($row_quotes as $key => $value) {
+                        $quotes_array[$key] = $value;
+                    }
+
+                    $tags = self::getTagsByQuoteID($this, $row_quotes['quote_id']);
+
+                    $quotes_array['tags'] = $tags;
+                    array_push($author_array['quotes'], $quotes_array);
+                }
+
+
+
+                array_push($authorList_array, $author_array);
+
+            }
+
+
+            return $authorList_array;
+        
+
+            
+        }
+        
+      
+
+        if ($tag_id == 'all' && $author_id == 'all' && $quote_id == 'null') {
+
+            // All authors All Categories
+
             $stmtAuthor = $this->conn->prepare("SELECT * from authors 
             		ORDER BY author_name  ASC");
-            
             $stmtAuthor->execute();
-
             $resultAuthor = $stmtAuthor->get_result();
             $stmtAuthor->close();
-                  
-                  
-                 while ($row_authors = $resultAuthor->fetch_assoc()) 
-        		{
-        			foreach( $row_authors as $key=>$value )
-        			{
-        				$author_array[$key] = $value;
-        			}
-        	
-        			$author_array['quotes'] = array();
-        			$id_author = $row_authors['id_author'];  
-        			
-        			
-                	$stmtQuote = $this->conn->prepare(
-                			"SELECT q.* ,c.category_name 
-                			FROM quotes q ,categories c 
-                			WHERE q.id_category = c.id_category 
-                			AND id_author = ".$id_author."
-                			ORDER BY q.quote_likes_count  DESC");   
-                	
-                    $stmtQuote->execute();
-                  	$resultQuote = $stmtQuote->get_result();
-                  	$stmtQuote->close();
-                  
-                  	
-    				while ($row_quotes = $resultQuote->fetch_assoc())
-    				{
-    					foreach( $row_quotes as $key=>$value )
-    					{
-    						$quotes_array[$key] = $value;
-    					}
-    						
-        				array_push($author_array['quotes'],$quotes_array);
-    				}
-
-    			array_push($authorList_array,$author_array);
-			}
 
 
-            
-            
+            while ($row_authors = $resultAuthor->fetch_assoc()) {
+                foreach ($row_authors as $key => $value) {
+                    $author_array[$key] = $value;
+                }
+
+                $author_array['quotes'] = array();
+                $author_id = $row_authors['author_id'];
+
+
+                $authorQuotes = self::getQuotesByAuthor($this, $author_id);
+
+
+
+                while ($row_quotes = $authorQuotes->fetch_assoc()) {
+                    foreach ($row_quotes as $key => $value) {
+                        $quotes_array[$key] = $value;
+                    }
+
+                    $tags = self::getTagsByQuoteID($this, $row_quotes['quote_id']);
+
+                    $quotes_array['tags'] = $tags;
+                    array_push($author_array['quotes'], $quotes_array);
+                }
+
+
+
+                array_push($authorList_array, $author_array);
+            }
+
+
+
+
             return $authorList_array;
-            
+        } else if ($tag_id == 'all' && $author_id != 'all' && $quote_id == 'null') {
+            // Single author All Categories
+
+            $stmtauthor = $this->conn->prepare("SELECT * from authors 
+            			WHERE author_id = " . $author_id . "");
+            $stmtauthor->execute();
+
+            $resultAuthor = $stmtauthor->get_result();
+            $stmtauthor->close();
+
+            while ($row_authors = $resultAuthor->fetch_assoc()) {
+                foreach ($row_authors as $key => $value) {
+                    $author_array[$key] = $value;
+                }
+
+                $author_array['quotes'] = array();
+                $author_id = $row_authors['author_id'];
+
+
+                $authorQuotes = self::getQuotesByAuthor($this, $author_id);
 
 
 
-    }
-    else if($category_id == 'all' && $author_id != 'all' && $quote_id == 'null')
-            {
-            	// Single author All Categories
-            	
-            	$stmtauthor = $this->conn->prepare("SELECT * from authors 
-            			WHERE id_author = ".$author_id."");
-            	$stmtauthor->execute();
-            	
-            	$resultauthor = $stmtauthor->get_result();
-            	$stmtauthor->close();
-            	
-            	
-            	while ($row_authors = $resultauthor->fetch_assoc())
-            	{
-            		foreach( $row_authors as $key=>$value )
-            		{
-            			$author_array[$key] = $value;
-            		}
-            		 
-            		$author_array['quotes'] = array();
-            		$id_author = $row_authors['id_author'];
-            		 
-            		 
-            		$stmtQuote = $this->conn->prepare(
-            				"SELECT q.* ,c.category_name
-                			FROM quotes q ,categories c
-                			WHERE q.id_category = c.id_category
-                			AND id_author = ".$id_author." ");
-            		 
-            		$stmtQuote->execute();
-            		$resultQuote = $stmtQuote->get_result();
-            		$stmtQuote->close();
-            	
-            		 
-            		while ($row_quotes = $resultQuote->fetch_assoc())
-            		{
-            			foreach( $row_quotes as $key=>$value )
-            			{
-            				$quotes_array[$key] = $value;
-            			}
-            	
-            			array_push($author_array['quotes'],$quotes_array);
-            		}
-            	
-            		array_push($authorList_array,$author_array);
-            	}
-            	
+                while ($row_quotes = $authorQuotes->fetch_assoc()) {
+                    foreach ($row_quotes as $key => $value) {
+                        $quotes_array[$key] = $value;
+                    }
 
-            	return $authorList_array;
-            	
+                    $tags = self::getTagsByQuoteID($this, $row_quotes['quote_id']);
+                    $quotes_array['tags'] = $tags;
+                    array_push($author_array['quotes'], $quotes_array);
+                }
+
+
+
+                array_push($authorList_array, $author_array);
             }
-   else if($category_id != 'all' && $author_id != 'all' && $quote_id == 'null')
-            {
-            	// Single author Single Category
-            	       
-            	$stmtauthor = $this->conn->prepare("SELECT * from author
-            			WHERE id_author = ".$author_id."");
-            	$stmtauthor->execute();
-            	 
-            	$resultauthor = $stmtauthor->get_result();
-            	$stmtauthor->close();
-            	 
-            	 
-            	while ($row_authors = $resultauthor->fetch_assoc())
-            	{
-            		foreach( $row_authors as $key=>$value )
-            		{
-            			$author_array[$key] = $value;
-            		}
-            		 
-            		$author_array['quotes'] = array();
-            		$id_author = $row_authors['id_author'];
-            		 
-            		 
-            		
-            	
-            						
-            						
-            		$stmtQuote = $this->conn->prepare(
-            				"SELECT q.* ,c.category_name
+
+
+            return $authorList_array;
+        } else if ($category_id != 'all' && $author_id != 'all' && $quote_id == 'null') {
+            // Single author Single Category
+
+            $stmtauthor = $this->conn->prepare("SELECT * from authors
+            			WHERE author_id = " . $author_id . "");
+            $stmtauthor->execute();
+
+            $resultauthor = $stmtauthor->get_result();
+            $stmtauthor->close();
+
+
+            while ($row_authors = $resultauthor->fetch_assoc()) {
+                foreach ($row_authors as $key => $value) {
+                    $author_array[$key] = $value;
+                }
+
+                $author_array['quotes'] = array();
+                $author_id = $row_authors['author_id'];
+
+
+
+
+
+
+                $stmtQuote = $this->conn->prepare(
+                        "SELECT q.* ,c.category_name
                 			FROM quotes q ,categories c
-                			WHERE q.id_category = c.id_category
-                			AND id_author = ".$id_author." 
-            				AND q.id_category = ".$category_id."");
-            		 
-            		$stmtQuote->execute();
-            		$resultQuote = $stmtQuote->get_result();
-            		$stmtQuote->close();
-            		 
-            		 
-            		while ($row_quotes = $resultQuote->fetch_assoc())
-            		{
-            			foreach( $row_quotes as $key=>$value )
-            			{
-            				$quotes_array[$key] = $value;
-            			}
-            			 
-            			array_push($author_array['quotes'],$quotes_array);
-            		}
-            		 
-            		array_push($authorList_array,$author_array);
-            	}
-            	 
-            	
-            	return $authorList_array;
-            	 
+                			WHERE q.category_id = c.category_id
+                			AND author_id = " . $author_id . " 
+            				AND q.category_id = " . $category_id . "");
+
+                $stmtQuote->execute();
+                $resultQuote = $stmtQuote->get_result();
+                $stmtQuote->close();
+
+
+                while ($row_quotes = $resultQuote->fetch_assoc()) {
+                    foreach ($row_quotes as $key => $value) {
+                        $quotes_array[$key] = $value;
+                    }
+
+                    array_push($author_array['quotes'], $quotes_array);
+                }
+
+                array_push($authorList_array, $author_array);
             }
-            else if($category_id != 'all' && $author_id == 'all' && $quote_id == 'null')
-            {
-            	// Single Category All author
-            
-            	$stmtauthor = $this->conn->prepare("SELECT * from authors");
-            	$stmtauthor->execute();
-            
-            	$resultauthor = $stmtauthor->get_result();
-            	$stmtauthor->close();
-            
-            
-            	while ($row_authors = $resultauthor->fetch_assoc())
-            	{
-            		foreach( $row_authors as $key=>$value )
-            		{
-            			$author_array[$key] = $value;
-            		}
-            		 
-            		$author_array['quotes'] = array();
-            		$id_author = $row_authors['id_author'];
-            		 
-            		 
-            
-            		 
-            
-       
-            		$stmtQuote = $this->conn->prepare(
-            				"SELECT q.* ,c.category_name
+
+
+            return $authorList_array;
+        } else if ($category_id != 'all' && $author_id == 'all' && $quote_id == 'null') {
+            // Single Category All author
+
+            $stmtauthor = $this->conn->prepare("SELECT * from authors");
+            $stmtauthor->execute();
+
+            $resultauthor = $stmtauthor->get_result();
+            $stmtauthor->close();
+
+
+            while ($row_authors = $resultauthor->fetch_assoc()) {
+                foreach ($row_authors as $key => $value) {
+                    $author_array[$key] = $value;
+                }
+
+                $author_array['quotes'] = array();
+                $author_id = $row_authors['author_id'];
+
+
+
+
+
+
+                $stmtQuote = $this->conn->prepare(
+                        "SELECT q.* ,c.category_name
                 			FROM quotes q ,categories c
-                			WHERE q.id_category = c.id_category
-                			AND id_author = ".$id_author."
-            				AND q.id_category = ".$category_id."");
-            		 
-            		$stmtQuote->execute();
-            		$resultQuote = $stmtQuote->get_result();
-            		$stmtQuote->close();
-            		 
-            		 
-            		while ($row_quotes = $resultQuote->fetch_assoc())
-            		{
-            			foreach( $row_quotes as $key=>$value )
-            			{
-            				$quotes_array[$key] = $value;
-            			}
-            
-            			array_push($author_array['quotes'],$quotes_array);
-            		}
-            		 
-            		array_push($authorList_array,$author_array);
-            	}
-            
-            	 
-            	return $authorList_array;
-            
+                			WHERE q.category_id = c.category_id
+                			AND author_id = " . $author_id . "
+            				AND q.category_id = " . $category_id . "");
+
+                $stmtQuote->execute();
+                $resultQuote = $stmtQuote->get_result();
+                $stmtQuote->close();
+
+
+                while ($row_quotes = $resultQuote->fetch_assoc()) {
+                    foreach ($row_quotes as $key => $value) {
+                        $quotes_array[$key] = $value;
+                    }
+
+                    array_push($author_array['quotes'], $quotes_array);
+                }
+
+                array_push($authorList_array, $author_array);
             }
-            else if($category_id == 'null' && $author_id == 'null' 
-            		&& $quote_id != 'null')
-            {
-            	// Single Category All author
-            	
-          
-            
-            	$stmtauthor = $this->conn->prepare("SELECT a.* 
+
+
+            return $authorList_array;
+        } else if ($category_id == 'null' && $author_id == 'null' && $quote_id != 'null') {
+            // Single Category All author
+
+
+
+            $stmtauthor = $this->conn->prepare("SELECT a.* 
 													FROM author a, quotes q
-													WHERE a.id_author = q.id_author
-													AND id_quote = ".$quote_id."");
-            	$stmtauthor->execute();
-            
-            	$resultauthor = $stmtauthor->get_result();
-            	$stmtauthor->close();
-            
-            
-            	while ($row_authors = $resultauthor->fetch_assoc())
-            	{
-            		foreach( $row_authors as $key=>$value )
-            		{
-            			$author_array[$key] = $value;
-            		}
-            		 
-            		$author_array['quotes'] = array();
-            		$id_author = $row_authors['id_author'];
-            		 
-            		 
-            
-            		 
-            
-            
-            		$stmtQuote = $this->conn->prepare(
-            				"SELECT q.* ,c.category_name
+													WHERE a.author_id = q.author_id
+													AND quote_id = " . $quote_id . "");
+            $stmtauthor->execute();
+
+            $resultauthor = $stmtauthor->get_result();
+            $stmtauthor->close();
+
+
+            while ($row_authors = $resultauthor->fetch_assoc()) {
+                foreach ($row_authors as $key => $value) {
+                    $author_array[$key] = $value;
+                }
+
+                $author_array['quotes'] = array();
+                $author_id = $row_authors['author_id'];
+
+
+
+
+
+
+                $stmtQuote = $this->conn->prepare(
+                        "SELECT q.* ,c.category_name
                 			FROM quotes q ,categories c
-                			WHERE q.id_category = c.id_category
-                			AND id_author = ".$id_author."
-            				AND id_quote = ".$quote_id."");
-            		 
-            		$stmtQuote->execute();
-            		$resultQuote = $stmtQuote->get_result();
-            		$stmtQuote->close();
-            		 
-            		 
-            		while ($row_quotes = $resultQuote->fetch_assoc())
-            		{
-            			foreach( $row_quotes as $key=>$value )
-            			{
-            				$quotes_array[$key] = $value;
-            			}
-            
-            			array_push($author_array['quotes'],$quotes_array);
-            		}
-            		 
-            		array_push($authorList_array,$author_array);
-            	}
-            
-            
-            	return $authorList_array;
-            
+                			WHERE q.category_id = c.category_id
+                			AND author_id = " . $author_id . "
+            				AND quote_id = " . $quote_id . "");
+
+                $stmtQuote->execute();
+                $resultQuote = $stmtQuote->get_result();
+                $stmtQuote->close();
+
+
+                while ($row_quotes = $resultQuote->fetch_assoc()) {
+                    foreach ($row_quotes as $key => $value) {
+                        $quotes_array[$key] = $value;
+                    }
+
+                    array_push($author_array['quotes'], $quotes_array);
+                }
+
+                array_push($authorList_array, $author_array);
             }
+
+
+            return $authorList_array;
+        }
     }
-    
-    
-                
-    
-    public function  getCategories() {
-    
-    	 
+
+    public static function getTagsByQuoteID($context, $quote_id) {
 
 
-    		$stmt = $this->conn->prepare("SELECT * from categories 
+        $tags_array = array();
+        $stmt = $context->conn->prepare(
+                "SELECT t.* FROM tags t, quotes_tags qt 
+                                         WHERE t.tag_id = qt.tag_id
+                                        AND qt.quote_id = $quote_id");
+
+
+        $stmt->execute();
+        $resultTags = $stmt->get_result();
+        $rows = [];
+        while ($row = $resultTags->fetch_assoc()) {
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    public static function getQuotesByAuthor($context, $author_id) {
+
+
+        $stmt = $context->conn->prepare(
+                "SELECT q.* 
+                			FROM quotes q 
+                			WHERE 
+                			author_id = " . $author_id . "
+                			ORDER BY q.quote_likes_count  DESC");
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
+
+    public static function getQuoteByID($context, $quote_id) {
+
+
+        $stmt = $context->conn->prepare(
+                "SELECT q.* 
+                			FROM quotes q 
+                			WHERE 
+                			quote_id = " . $quote_id . "
+                			ORDER BY q.quote_likes_count  DESC");
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
+    public function getCategories() {
+
+
+
+
+        $stmt = $this->conn->prepare("SELECT * from categories 
     				ORDER BY category_name  ASC");
-    		$stmt->execute();
-    
-    		$result = $stmt->get_result();
-    		$stmt->close();
-    		$categories_array = array();
-    
-    		while($row = $result->fetch_assoc())
-    		{
-    			
-    			
-    			foreach( $row as $key=>$value )
-    			{
-    				$categories_temp[$key] = $value;
-    			}
-    			 
-    			array_push($categories_array,$categories_temp);
-    			 
-    		}
-    
+        $stmt->execute();
 
-    		return $categories_array;
-    
+        $result = $stmt->get_result();
+        $stmt->close();
+        $categories_array = array();
 
+        while ($row = $result->fetch_assoc()) {
+
+
+            foreach ($row as $key => $value) {
+                $categories_temp[$key] = $value;
+            }
+
+            array_push($categories_array, $categories_temp);
+        }
+
+
+        return $categories_array;
+    }
+    
+   public function getCardColors() {
+
+
+
+
+        $stmt = $this->conn->prepare("SELECT * from settings WHERE name LIKE  'color%' 
+    				");
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        $stmt->close();
+        $categories_array = array();
+
+        while ($row = $result->fetch_assoc()) {
+
+
+            foreach ($row as $key => $value) {
+                $categories_temp[$key] = $value;
+            }
+
+            array_push($categories_array, $categories_temp);
+        }
+
+
+        return $categories_array;
     }
     
     
-    public function  getAuthors($sort) {
-    
-    
-    	$stmt = null;
-    	
-    	if($sort == "by_asc"){
-    		
-    		$stmt = $this->conn->prepare("SELECT * from authors
-    				ORDER BY author_name  ASC");
-    	}
-    	else if ($sort == "by_likes"){
-    		
-    		$stmt = $this->conn->prepare("SELECT * from authors
-    				ORDER BY author_likes_count DESC");
-    	}
+    public static function getQODID($context) {
 
-    	$stmt->execute();
+
+
+
+        $stmt = $context->conn->prepare("SELECT * from settings WHERE name = 'quote_of_the_day' 
+    				");
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        $stmt->close();
+        $res = $result->fetch_assoc();
+
+        $quote_id = $res['value'];
+
+
+        return $quote_id;
+    }
     
-    	$result = $stmt->get_result();
-    	$stmt->close();
-    	$authors_array = array();
+    public static function getMFQID($context) {
+
+
+
+
+        $stmt = $context->conn->prepare("SELECT * FROM quotes 
+            WHERE quote_likes_count = (SELECT MAX(quote_likes_count) FROM quotes)
+    				");
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        $stmt->close();
+        $res = $result->fetch_assoc();
+        
+
+        $quote_id = $res['quote_id'];
+
+
+        return $quote_id;
+    }
     
-    	while($row = $result->fetch_assoc())
-    	{
-    		 
-    		 
-    		foreach( $row as $key=>$value )
-    		{
-    			$authors_temp[$key] = $value;
-    		}
     
-    		array_push($authors_array,$authors_temp);
+//   public static function getMFQID($context) {
+//
+//
+//
+//
+//        $stmt = $context->conn->prepare("SELECT * FROM quotes 
+//            WHERE quote_likes_count = (SELECT MAX(quote_likes_count) FROM quotes)
+//    				");
+//        $stmt->execute();
+//
+//        $result = $stmt->get_result();
+//        $stmt->close();
+//        $res = $result->fetch_assoc();
+//        
+//
+//        $quote_id = $res['quote_id'];
+//
+//
+//        return $quote_id;
+//    }
+
+   public static function getRQID($context) {
+
+
+
+
+        $stmt = $context->conn->prepare("SELECT * FROM quotes 
+                ORDER BY RAND()
+
+    				");
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        $stmt->close();
+        $res = $result->fetch_assoc();
+        
+
+        $quote_id = $res['quote_id'];
+
+
+        return $quote_id;
+    }
     
-    	}
-    
-    
-    	return $authors_array;
-    
-    
+
+    public function getAuthors($sort) {
+
+
+        $stmt = null;
+
+        if ($sort == "by_asc") {
+
+            $stmt = $this->conn->prepare("SELECT * from authors
+    				ORDER BY author_name  ASC");
+        } else if ($sort == "by_likes") {
+
+            $stmt = $this->conn->prepare("SELECT * from authors
+    				ORDER BY author_likes_count DESC");
+        }
+
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        $stmt->close();
+        $authors_array = array();
+
+        while ($row = $result->fetch_assoc()) {
+
+
+            foreach ($row as $key => $value) {
+                $authors_temp[$key] = $value;
+            }
+
+            array_push($authors_array, $authors_temp);
+        }
+
+
+        return $authors_array;
     }
 
     /**
      * Fetching all user tasks
      * @param String $user_id id of the user
-     */ 
+     */
     public function getAllUserTasks($user_id) {
         $stmt = $this->conn->prepare("SELECT t.* FROM tasks t, user_tasks ut WHERE t.id = ut.task_id AND ut.user_id = ?");
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
         $tasks = $stmt->get_result();
         $stmt->close();
-        
+
         return $tasks;
     }
 

@@ -141,9 +141,9 @@ $app->post('/login', function() use ($app) {
  * url /tasks          
  */
         
-$app->get('/get_quotes/:category_id/:auther_id/:quote_id','authenticate',
+$app->get('/get_quotes/:tag_id/:auther_id/:quote_id','authenticate',
 		
-		function($category_id,$auther_id,$quote_id) 
+		function($tag_id,$auther_id,$quote_id) 
 		{
             global $user_id;
             
@@ -154,12 +154,12 @@ $app->get('/get_quotes/:category_id/:auther_id/:quote_id','authenticate',
               $Responce = new Responce();
 
             // fetch task
-            $result = $db->getQuotes($category_id,$auther_id,$quote_id);
+            $result = $db->getQuotes($tag_id,$auther_id,$quote_id,null,null,null);
 
             if ($result != NULL) {
                 $Responce->setError(false);
                 $Responce->setMessage("false");
-                $Responce->setData('quotes',$result);
+                $Responce->setData('author_quotes',$result);
 
 //                $result["error"] = false;
 //                $response["id"] = $result["id"];
@@ -178,6 +178,41 @@ $app->get('/get_quotes/:category_id/:auther_id/:quote_id','authenticate',
             echoRespnse(201, $Responce->setArray());
         });
 
+$app->get('/get_dashboard/','authenticate',
+
+		function()
+		{
+			global $user_id;
+
+
+			$response = array();
+			$db = new DbHandler();
+
+			$Responce = new Responce();
+
+			// fetch task
+			$resultQOD = $db->getQuotes(null,null,null,TRUE,null,null);
+			$resultMFQ = $db->getQuotes(null,null,null,null,TRUE,null);
+			$resultRQ = $db->getQuotes(null,null,null,null,null,TRUE);
+			$resultCardColors = $db->getCardColors();
+
+			if ($resultQOD != NULL) {
+				$Responce->setError(false);
+				$Responce->setMessage("false");
+				$Responce->setData('quote_of_the_day',$resultQOD);
+				$Responce->setData('most_fevourite_quote',$resultMFQ);
+				$Responce->setData('random_quote',$resultRQ);
+				$Responce->setData('card_colors',$resultCardColors);
+
+
+			} else {
+				$Responce->setError(false);
+				$Responce->setMessage("false");
+		
+			}
+
+			echoRespnse(201, $Responce->setArray());
+});
 
 $app->get('/get_categories/','authenticate',
 
